@@ -19,8 +19,4 @@ use Illuminate\Support\Facades\Route;
 Route::prefix(ApiConstant::VERSION)->namespace("App\Http\Controllers")->group(function () {
     Route::prefix(ApiConstant::PREFIX_ADMIN)->group(__DIR__ . "/" . ApiConstant::PREFIX_ADMIN . "/api.php");
     Route::prefix(ApiConstant::PREFIX_USER)->group(__DIR__ . "/" . ApiConstant::PREFIX_USER . "/api.php");
-    Route::middleware([TokenConstant::AUTH_SANCTUM])
-        ->prefix(ApiConstant::PREFIX_SUBSCRIPTION)
-        ->namespace("Subscriptions")
-        ->group(__DIR__ . "/subscription.php");
 });
