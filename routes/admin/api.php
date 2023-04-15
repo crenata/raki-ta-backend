@@ -1,6 +1,10 @@
 <?php
 
 use App\Constants\ApiConstant;
+use App\Constants\TokenConstant;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix(ApiConstant::PREFIX_AUTH)->namespace(ucfirst(ApiConstant::PREFIX_AUTH))->group(__DIR__ . "/" . ApiConstant::PREFIX_AUTH . ".php");
+Route::middleware([TokenConstant::AUTH_SANCTUM, TokenConstant::AUTH_ADMIN])->namespace(ucfirst(ApiConstant::PREFIX_ADMIN))->group(function () {
+    Route::prefix(ApiConstant::PREFIX_OBSERVATION)->group(__DIR__ . "/" . ApiConstant::PREFIX_OBSERVATION . ".php");
+});

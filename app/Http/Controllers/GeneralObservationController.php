@@ -14,7 +14,7 @@ class GeneralObservationController extends Controller {
         $this->observationHistoryTable = (new ObservationHistoryModel())->getTable();
     }
 
-    public function get(array $conditions = []) {
+    public function get(array $conditions = [], $id = null) {
         $detailIds = DB::table("$this->observationHistoryTable as detail_mx")
             ->selectRaw("max(detail_mx.id) as detail_id, detail_mx.observation_id")
             ->groupBy("detail_mx.observation_id")
@@ -22,7 +22,7 @@ class GeneralObservationController extends Controller {
         $detailData = DB::table("$this->observationHistoryTable as detail_data")
             ->selectRaw("detail_data.id, detail_data.status")
             ->toSql();
-        return ObservationModel::with("latestHistory")
+        $data = ObservationModel::with("latestHistory")
             ->select("$this->observationTable.*")
             ->leftJoinSub(
                 $detailIds,
@@ -39,7 +39,11 @@ class GeneralObservationController extends Controller {
                 "detail_max.detail_id"
             )
             ->whereRaw(implode(" and ", $conditions))
-            ->orderByDesc("$this->observationTable.id")
-            ->paginate();
+            ->orderByDesc("$this->observationTable.id");
+
+        if (empty($id)) $data = $data->paginate();
+        else $data = $data->find($id);
+
+        return $data;
     }
 }
