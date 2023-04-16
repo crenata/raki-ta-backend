@@ -8,4 +8,5 @@ class ApiConstant {
     const PREFIX_USER = "user";
     const PREFIX_AUTH = "auth";
     const PREFIX_OBSERVATION = "observation";
+    const PREFIX_NOTIFICATION = "notification";
 }

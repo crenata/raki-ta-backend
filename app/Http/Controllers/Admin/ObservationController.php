@@ -6,9 +6,11 @@ use App\Constants\ObservationStatusConstant;
 use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\GeneralObservationController;
+use App\Models\NotificationModel;
 use App\Models\ObservationHistoryModel;
 use App\Models\ObservationModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ObservationController extends Controller {
@@ -34,21 +36,35 @@ class ObservationController extends Controller {
         ]);
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
+        $isApproved = $status === ObservationStatusConstant::APPROVED;
+
         $observation = (new GeneralObservationController())->get([
             "detail.status = " . ObservationStatusConstant::PENDING
         ], $id);
         if (empty($observation->id)) return ResponseHelper::response(
             null,
-            "Already " . ($status === ObservationStatusConstant::APPROVED ? "approved" : "rejected"),
+            "Already " . ($isApproved ? "approved" : "rejected"),
             400
         );
 
-        ObservationHistoryModel::create([
-            "observation_id" => $observation->id,
-            "status" => $status
-        ]);
+        return DB::transaction(function () use ($status, $isApproved, $observation) {
+            ObservationHistoryModel::create([
+                "observation_id" => $observation->id,
+                "status" => $status
+            ]);
 
-        return ResponseHelper::response($observation);
+            if ($isApproved) $description = "Congratulations.., Your observation has been approved by Administrator.";
+            else $description = "Sorry, Your observation has been rejected by Administrator. Feel free to re-submit again.";
+            NotificationModel::create([
+                "observation_id" => $observation->id,
+                "admin_id" => auth()->id(),
+                "user_id" => $observation->user_id,
+                "title" => "Your observation has been " . ($isApproved ? "approved" : "rejected"),
+                "description" => $description
+            ]);
+
+            return ResponseHelper::response($observation);
+        });
     }
 
     public function approve(Request $request, $id) {
