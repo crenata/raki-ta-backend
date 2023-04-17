@@ -38,7 +38,7 @@ class ObservationController extends Controller {
 
         $observation = (new GeneralObservationController())->get([
             "detail.status = " . ObservationStatusConstant::PENDING
-        ]);
+        ], $id);
         if (empty($observation->id)) return ResponseHelper::response(null, "Observation not found", 400);
 
         return ResponseHelper::response($observation);
