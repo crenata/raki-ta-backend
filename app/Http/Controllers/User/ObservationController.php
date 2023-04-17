@@ -16,12 +16,34 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class ObservationController extends Controller {
+    protected $observationTable;
+
+    public function __construct() {
+        $this->observationTable = (new ObservationModel())->getTable();
+    }
+
     public function get(Request $request) {
         $observations = (new GeneralObservationController())->get([
             "detail.status = " . ObservationStatusConstant::APPROVED
         ]);
 
         return ResponseHelper::response($observations);
+    }
+
+    public function getDetail(Request $request, $id) {
+        $validator = Validator::make([
+            "id" => $id
+        ], [
+            "id" => "required|numeric|exists:$this->observationTable,id"
+        ]);
+        if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
+
+        $observation = (new GeneralObservationController())->get([
+            "detail.status = " . ObservationStatusConstant::APPROVED
+        ], $id);
+        if (empty($observation->id)) return ResponseHelper::response(null, "Observation not found", 400);
+
+        return ResponseHelper::response($observation);
     }
 
     public function add(Request $request) {

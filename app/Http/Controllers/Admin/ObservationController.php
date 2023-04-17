@@ -28,6 +28,22 @@ class ObservationController extends Controller {
         return ResponseHelper::response($observations);
     }
 
+    public function getDetail(Request $request, $id) {
+        $validator = Validator::make([
+            "id" => $id
+        ], [
+            "id" => "required|numeric|exists:$this->observationTable,id"
+        ]);
+        if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
+
+        $observation = (new GeneralObservationController())->get([
+            "detail.status = " . ObservationStatusConstant::PENDING
+        ]);
+        if (empty($observation->id)) return ResponseHelper::response(null, "Observation not found", 400);
+
+        return ResponseHelper::response($observation);
+    }
+
     public function set($id, $status) {
         $validator = Validator::make([
             "id" => $id
