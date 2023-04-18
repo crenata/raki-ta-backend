@@ -24,7 +24,10 @@ class CommentController extends Controller {
         ]);
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
-        $comments = CommentModel::where("observation_id", $id)->orderByDesc("id")->paginate();
+        $comments = CommentModel::with("user")
+            ->where("observation_id", $id)
+            ->orderByDesc("id")
+            ->paginate();
 
         return ResponseHelper::response($comments);
     }
