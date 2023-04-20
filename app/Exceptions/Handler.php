@@ -71,6 +71,7 @@ class Handler extends ExceptionHandler
      * @throws \Throwable
      */
     public function render($request, Throwable $e) {
+        if ($e->getMessage() === "Unauthenticated.") return $this->unauthenticated($request, new AuthenticationException());
         return ResponseHelper::response(null, $e->getMessage(), 500);
     }
 }
