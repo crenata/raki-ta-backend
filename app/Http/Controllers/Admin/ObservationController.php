@@ -47,7 +47,7 @@ class ObservationController extends Controller {
         ]);
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
-        $observation = ObservationModel::with("histories", "latestHistory")->find($id);
+        $observation = ObservationModel::with("histories", "latestHistory", "user")->find($id);
         if (empty($observation->id)) return ResponseHelper::response(null, "Observation not found", 400);
 
         return ResponseHelper::response($observation);

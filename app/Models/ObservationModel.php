@@ -33,6 +33,10 @@ class ObservationModel extends BaseModel {
         return env("APP_URL") . "/storage/observation/" . $this->attributes["image"];
     }
 
+    public function user() {
+        return $this->belongsTo(UserModel::class, "user_id");
+    }
+
     public function histories() {
         return $this->hasMany(ObservationHistoryModel::class, "observation_id");
     }
