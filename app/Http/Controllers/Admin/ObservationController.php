@@ -6,6 +6,7 @@ use App\Constants\ObservationStatusConstant;
 use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\GeneralObservationController;
+use App\Models\CommentModel;
 use App\Models\NotificationModel;
 use App\Models\ObservationHistoryModel;
 use App\Models\ObservationModel;
@@ -17,10 +18,11 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class ObservationController extends Controller {
-    protected $observationTable;
+    protected $observationTable, $commentTable;
 
     public function __construct() {
         $this->observationTable = (new ObservationModel())->getTable();
+        $this->commentTable = (new CommentModel())->getTable();
     }
 
     public function get(Request $request) {
@@ -47,7 +49,7 @@ class ObservationController extends Controller {
         ]);
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
-        $observation = ObservationModel::with("histories", "latestHistory", "user")->find($id);
+        $observation = ObservationModel::with("histories", "latestHistory", "user", "comments.user")->find($id);
         if (empty($observation->id)) return ResponseHelper::response(null, "Observation not found", 400);
 
         return ResponseHelper::response($observation);
@@ -139,6 +141,19 @@ class ObservationController extends Controller {
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
         $observation = ObservationModel::find($id)->delete();
+
+        return ResponseHelper::response($observation);
+    }
+
+    public function deleteComment(Request $request, $id) {
+        $validator = Validator::make([
+            "id" => $id
+        ], [
+            "id" => "required|numeric|exists:$this->commentTable,id"
+        ]);
+        if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
+
+        $observation = CommentModel::find($id)->delete();
 
         return ResponseHelper::response($observation);
     }

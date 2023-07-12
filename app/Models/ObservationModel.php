@@ -41,6 +41,10 @@ class ObservationModel extends BaseModel {
         return $this->hasMany(ObservationHistoryModel::class, "observation_id");
     }
 
+    public function comments() {
+        return $this->hasMany(CommentModel::class, "observation_id");
+    }
+
     public function latestHistory() {
         return $this->hasOne(ObservationHistoryModel::class, "observation_id")->orderByDesc("id");
     }

@@ -9,3 +9,4 @@ Route::get("approve/{id}", "ObservationController@approve");
 Route::get("reject/{id}", "ObservationController@reject");
 Route::post("edit", "ObservationController@edit");
 Route::delete("delete/{id}", "ObservationController@delete");
+Route::delete("comment/{id}", "ObservationController@deleteComment");
