@@ -23,15 +23,10 @@ class ObservationModel extends BaseModel {
         "longitude",
         "location",
         "description",
-        "image",
         "created_at",
         "updated_at",
         "deleted_at"
     ];
-
-    public function getImageAttribute() {
-        return env("APP_URL") . "/storage/observation/" . $this->attributes["image"];
-    }
 
     public function user() {
         return $this->belongsTo(UserModel::class, "user_id");
@@ -39,6 +34,10 @@ class ObservationModel extends BaseModel {
 
     public function histories() {
         return $this->hasMany(ObservationHistoryModel::class, "observation_id");
+    }
+
+    public function images() {
+        return $this->hasMany(ObservationImageModel::class, "observation_id");
     }
 
     public function comments() {

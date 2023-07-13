@@ -7,6 +7,7 @@ use App\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\GeneralObservationController;
 use App\Models\ObservationHistoryModel;
+use App\Models\ObservationImageModel;
 use App\Models\ObservationModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -54,14 +55,12 @@ class ObservationController extends Controller {
             "longitude" => ["required", "regex:/^[-]?((((1[0-7][0-9])|([0-9]?[0-9]))\.(\d+))|180(\.0+)?)$/"],
             "location" => "required|string",
             "description" => "required|string",
-            "image" => "required|file|image"
+            "images" => "required|array",
+            "images.*" => "required|file|image"
         ]);
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
         return DB::transaction(function () use ($request) {
-            $image = Carbon::now()->format("Y-m-d-H-i") . "-observation-" . Str::random(12) . "." . $request->file("image")->getClientOriginalExtension();
-            Storage::disk("public")->putFileAs("observation", $request->file("image"), $image);
-
             $observation = ObservationModel::create([
                 "user_id" => auth()->id(),
                 "name" => $request->name,
@@ -69,9 +68,17 @@ class ObservationController extends Controller {
                 "latitude" => $request->latitude,
                 "longitude" => $request->longitude,
                 "location" => $request->location,
-                "description" => $request->description,
-                "image" => $image
+                "description" => $request->description
             ]);
+
+            foreach ($request->file("images") as $file) {
+                $image = Carbon::now()->format("Y-m-d-H-i") . "-observation-" . Str::random(12) . "." . $file->getClientOriginalExtension();
+                Storage::disk("public")->putFileAs("observation", $file, $image);
+                ObservationImageModel::create([
+                    "observation_id" => $observation->id,
+                    "image" => $image
+                ]);
+            }
 
             ObservationHistoryModel::create([
                 "observation_id" => $observation->id,

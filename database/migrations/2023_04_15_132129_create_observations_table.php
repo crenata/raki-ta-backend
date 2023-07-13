@@ -25,7 +25,6 @@ return new class extends Migration {
             $table->unsignedDouble("longitude");
             $table->longText("location");
             $table->longText("description");
-            $table->string("image");
             $this->timestamps($table);
             $this->softDeletes($table);
 

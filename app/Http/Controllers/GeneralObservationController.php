@@ -22,7 +22,7 @@ class GeneralObservationController extends Controller {
         $detailData = DB::table("$this->observationHistoryTable as detail_data")
             ->selectRaw("detail_data.id, detail_data.status")
             ->toSql();
-        $data = ObservationModel::with("latestHistory", "user")
+        $data = ObservationModel::with("latestHistory", "user", "images")
             ->select("$this->observationTable.*")
             ->leftJoinSub(
                 $detailIds,

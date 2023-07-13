@@ -9,6 +9,7 @@ use App\Http\Controllers\GeneralObservationController;
 use App\Models\CommentModel;
 use App\Models\NotificationModel;
 use App\Models\ObservationHistoryModel;
+use App\Models\ObservationImageModel;
 use App\Models\ObservationModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -49,7 +50,7 @@ class ObservationController extends Controller {
         ]);
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
-        $observation = ObservationModel::with("histories", "latestHistory", "user", "comments.user")->find($id);
+        $observation = ObservationModel::with("histories", "latestHistory", "images", "user", "comments.user")->find($id);
         if (empty($observation->id)) return ResponseHelper::response(null, "Observation not found", 400);
 
         return ResponseHelper::response($observation);
@@ -62,7 +63,9 @@ class ObservationController extends Controller {
             "latitude" => ["required", "regex:/^[-]?(([0-8]?[0-9])\.(\d+))|(90(\.0+)?)$/"],
             "longitude" => ["required", "regex:/^[-]?((((1[0-7][0-9])|([0-9]?[0-9]))\.(\d+))|180(\.0+)?)$/"],
             "location" => "required|string",
-            "description" => "required|string"
+            "description" => "required|string",
+            "images" => "nullable|array",
+            "images.*" => "required|file|image"
         ]);
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
@@ -74,12 +77,22 @@ class ObservationController extends Controller {
             $observation->longitude = $request->longitude;
             $observation->location = $request->location;
             $observation->description = $request->description;
-            if ($request->hasFile("image")) {
-                $image = Carbon::now()->format("Y-m-d-H-i") . "-observation-" . Str::random(12) . "." . $request->file("image")->getClientOriginalExtension();
-                Storage::disk("public")->putFileAs("observation", $request->file("image"), $image);
-                $observation->image = $image;
-            }
             $observation->save();
+
+            if ($request->hasFile("images")) {
+                $olds = ObservationImageModel::where("observation_id", $observation->id)->get();
+                foreach ($olds as $old) {
+                    $old->delete();
+                }
+                foreach ($request->file("images") as $file) {
+                    $image = Carbon::now()->format("Y-m-d-H-i") . "-observation-" . Str::random(12) . "." . $file->getClientOriginalExtension();
+                    Storage::disk("public")->putFileAs("observation", $file, $image);
+                    ObservationImageModel::create([
+                        "observation_id" => $observation->id,
+                        "image" => $image
+                    ]);
+                }
+            }
 
             return ResponseHelper::response($observation);
         });
