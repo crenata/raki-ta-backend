@@ -3,4 +3,4 @@ deployment:
     - export DEPLOYPATH=/home/fres2238/public_html/api.freshwaterfishindonesia.com/
     - /bin/cp -R * $DEPLOYPATH
     - cd $DEPLOYPATH
-    - /bin/ln -s ./storage/app/public public/storage
+    - /bin/php artisan storage:link
