@@ -17,12 +17,15 @@ class ObservationModel extends BaseModel {
      */
     protected $fillable = [
         "user_id",
+        "province_id",
         "name",
         "date",
         "latitude",
         "longitude",
-        "location",
         "description",
+        "local_name",
+        "found",
+        "substrate",
         "created_at",
         "updated_at",
         "deleted_at"
@@ -30,6 +33,10 @@ class ObservationModel extends BaseModel {
 
     public function user() {
         return $this->belongsTo(UserModel::class, "user_id");
+    }
+
+    public function province() {
+        return $this->belongsTo(ProvinceModel::class, "province_id");
     }
 
     public function histories() {

@@ -9,6 +9,7 @@ use App\Http\Controllers\GeneralObservationController;
 use App\Models\ObservationHistoryModel;
 use App\Models\ObservationImageModel;
 use App\Models\ObservationModel;
+use App\Models\ProvinceModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -17,10 +18,11 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class ObservationController extends Controller {
-    protected $observationTable;
+    protected $observationTable, $provinceTable;
 
     public function __construct() {
         $this->observationTable = (new ObservationModel())->getTable();
+        $this->provinceTable = (new ProvinceModel())->getTable();
     }
 
     public function get(Request $request) {
@@ -29,6 +31,12 @@ class ObservationController extends Controller {
         ]);
 
         return ResponseHelper::response($observations);
+    }
+
+    public function getProvince(Request $request) {
+        $provinces = ProvinceModel::all();
+
+        return ResponseHelper::response($provinces);
     }
 
     public function getDetail(Request $request, $id) {
@@ -53,8 +61,11 @@ class ObservationController extends Controller {
             "date" => "required|string|date",
             "latitude" => ["required", "regex:/^[-]?(([0-8]?[0-9])\.(\d+))|(90(\.0+)?)$/"],
             "longitude" => ["required", "regex:/^[-]?((((1[0-7][0-9])|([0-9]?[0-9]))\.(\d+))|180(\.0+)?)$/"],
-            "location" => "required|string",
+            "location" => "required|numeric|exists:$this->provinceTable,id",
             "description" => "required|string",
+            "local_name" => "required|string",
+            "found" => "required|string",
+            "substrate" => "required|string",
             "images" => "required|array",
             "images.*" => "required|file|image"
         ]);
@@ -63,12 +74,15 @@ class ObservationController extends Controller {
         return DB::transaction(function () use ($request) {
             $observation = ObservationModel::create([
                 "user_id" => auth()->id(),
+                "province_id" => $request->location,
                 "name" => $request->name,
                 "date" => $request->date,
                 "latitude" => $request->latitude,
                 "longitude" => $request->longitude,
-                "location" => $request->location,
-                "description" => $request->description
+                "description" => $request->description,
+                "local_name" => $request->local_name,
+                "found" => $request->found,
+                "substrate" => $request->substrate
             ]);
 
             foreach ($request->file("images") as $file) {

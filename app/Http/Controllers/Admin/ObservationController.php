@@ -11,6 +11,7 @@ use App\Models\NotificationModel;
 use App\Models\ObservationHistoryModel;
 use App\Models\ObservationImageModel;
 use App\Models\ObservationModel;
+use App\Models\ProvinceModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,11 +20,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class ObservationController extends Controller {
-    protected $observationTable, $commentTable;
+    protected $observationTable, $commentTable, $provinceTable;
 
     public function __construct() {
         $this->observationTable = (new ObservationModel())->getTable();
         $this->commentTable = (new CommentModel())->getTable();
+        $this->provinceTable = (new ProvinceModel())->getTable();
     }
 
     public function get(Request $request) {
@@ -32,6 +34,12 @@ class ObservationController extends Controller {
         ]);
 
         return ResponseHelper::response($observations);
+    }
+
+    public function getProvince(Request $request) {
+        $provinces = ProvinceModel::all();
+
+        return ResponseHelper::response($provinces);
     }
 
     public function getApproved(Request $request) {
@@ -50,7 +58,7 @@ class ObservationController extends Controller {
         ]);
         if ($validator->fails()) return ResponseHelper::response(null, $validator->errors()->first(), 400);
 
-        $observation = ObservationModel::with("histories", "latestHistory", "images", "user", "comments.user")->find($id);
+        $observation = ObservationModel::with("histories", "latestHistory", "images", "user", "comments.user", "province")->find($id);
         if (empty($observation->id)) return ResponseHelper::response(null, "Observation not found", 400);
 
         return ResponseHelper::response($observation);
@@ -62,8 +70,11 @@ class ObservationController extends Controller {
             "date" => "required|string|date",
             "latitude" => ["required", "regex:/^[-]?(([0-8]?[0-9])\.(\d+))|(90(\.0+)?)$/"],
             "longitude" => ["required", "regex:/^[-]?((((1[0-7][0-9])|([0-9]?[0-9]))\.(\d+))|180(\.0+)?)$/"],
-            "location" => "required|string",
+            "location" => "required|numeric|exists:$this->provinceTable,id",
             "description" => "required|string",
+            "local_name" => "required|string",
+            "found" => "required|string",
+            "substrate" => "required|string",
             "images" => "nullable|array",
             "images.*" => "required|file|image"
         ]);
@@ -71,12 +82,15 @@ class ObservationController extends Controller {
 
         return DB::transaction(function () use ($request) {
             $observation = ObservationModel::find($request->id);
+            $observation->province_id = $request->location;
             $observation->name = $request->name;
             $observation->date = $request->date;
             $observation->latitude = $request->latitude;
             $observation->longitude = $request->longitude;
-            $observation->location = $request->location;
             $observation->description = $request->description;
+            $observation->local_name = $request->local_name;
+            $observation->found = $request->found;
+            $observation->substrate = $request->substrate;
             $observation->save();
 
             if ($request->hasFile("images")) {

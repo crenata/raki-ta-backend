@@ -17,6 +17,10 @@ class UserController extends Controller {
         $this->userTable = (new UserModel())->getTable();
     }
 
+    public function self(Request $request) {
+        return ResponseHelper::response(auth()->user());
+    }
+
     public function register(Request $request) {
         $validator = Validator::make($request->all(), [
             "name" => "required|string",
