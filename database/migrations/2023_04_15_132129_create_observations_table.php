@@ -23,8 +23,8 @@ return new class extends Migration {
             $table->unsignedBigInteger("province_id");
             $table->string("name");
             $table->date("date");
-            $table->unsignedDouble("latitude");
-            $table->unsignedDouble("longitude");
+            $table->double("latitude", 11, 8);
+            $table->double("longitude", 11, 8);
             $table->longText("description");
             $table->string("local_name");
             $table->longText("found");
